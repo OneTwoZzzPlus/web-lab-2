@@ -1,4 +1,4 @@
-# Магазинчик
+# Список задач
 
 [ТЗ на работу](https://github.com/Dasha2101/WEB2025Q26LB2) ●
 [Развернутая страница](onetwozzzplus.github.io/web-lab-2)
