@@ -1,7 +1,7 @@
 export default function TaskItem(
     taskId,
     { title, date, completed },
-    { onToggle, onMoveUp, onMoveDown, onEdit, onRemove },
+    { onToggle, onMoveUp, onMoveDown, onEdit, onRemove, onMove },
 ) {
     const wrapper = document.createElement("li");
     wrapper.classList.add("task");
@@ -9,7 +9,7 @@ export default function TaskItem(
 
     if (completed) wrapper.classList.add("checked");
 
-    const canReorder = Boolean(onMoveUp || onMoveDown);
+    const canReorder = Boolean(onMoveUp || onMoveDown || onMove);
     wrapper.draggable = canReorder;
 
     const titleNode = document.createElement("p");
@@ -40,6 +40,81 @@ export default function TaskItem(
             const virtual = document.querySelector(".task.virtual");
             if (virtual) virtual.remove();
         });
+
+        let isTouching = false;
+        let touchStartY = 0;
+
+        wrapper.addEventListener(
+            "touchstart",
+            (e) => {
+                if (e.target.closest("button")) return;
+
+                isTouching = true;
+                touchStartY = e.touches[0].clientY;
+
+                setTimeout(() => {
+                    if (isTouching) {
+                        wrapper.classList.add("dragging");
+                    }
+                }, 150);
+            },
+            { passive: true },
+        );
+
+        wrapper.addEventListener(
+            "touchmove",
+            (e) => {
+                if (!isTouching || !wrapper.classList.contains("dragging"))
+                    return;
+
+                const touch = e.touches[0];
+                const touchY = touch.clientY;
+
+                const elementBelow = document.elementFromPoint(
+                    touch.clientX,
+                    touchY,
+                );
+                if (!elementBelow) return;
+
+                const targetTask = elementBelow.closest(
+                    ".task:not(.dragging):not(.virtual)",
+                );
+                if (
+                    targetTask &&
+                    targetTask.parentNode === wrapper.parentNode
+                ) {
+                    const rect = targetTask.getBoundingClientRect();
+                    const isAfter = touchY > rect.top + rect.height / 2;
+
+                    targetTask.parentNode.insertBefore(
+                        wrapper,
+                        isAfter ? targetTask.nextSibling : targetTask,
+                    );
+                }
+            },
+            { passive: true },
+        );
+
+        const handleTouchEnd = () => {
+            if (!isTouching) return;
+            isTouching = false;
+
+            const wasDragging = wrapper.classList.contains("dragging");
+            wrapper.classList.remove("dragging");
+
+            if (wasDragging && typeof onMove === "function") {
+                const nextElement = wrapper.nextElementSibling;
+                const targetId =
+                    nextElement && nextElement.dataset
+                        ? nextElement.dataset.taskId
+                        : null;
+
+                onMove(taskId, targetId, "before");
+            }
+        };
+
+        wrapper.addEventListener("touchend", handleTouchEnd);
+        wrapper.addEventListener("touchcancel", handleTouchEnd);
     }
 
     wrapper.append(titleNode, dateNode, control);

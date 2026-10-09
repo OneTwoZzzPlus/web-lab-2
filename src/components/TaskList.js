@@ -128,6 +128,7 @@ export default function TaskList(
                           onMove(id, nextTaskId, "after");
                       }
                   },
+            onMove,
         });
 
         taskListWrapper.append(taskItem);

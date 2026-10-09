@@ -291,3 +291,13 @@ li.virtual {
 li.dragging {
     display: none;
 }
+
+/* MOBILE DnD */
+
+.task.dragging {
+    opacity: 0;
+}
+
+.task {
+    touch-action: pan-x;
+}
