@@ -1,6 +1,28 @@
 import TaskItem from "./TaskItem.js";
 import TaskForm from "./TaskForm.js";
 
+const virtualPlaceholder = document.createElement("li");
+virtualPlaceholder.classList.add("task", "virtual");
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [
+        ...container.querySelectorAll(".task:not(.dragging):not(.virtual)"),
+    ];
+
+    return draggableElements.reduce(
+        (closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        },
+        { offset: Number.NEGATIVE_INFINITY },
+    ).element;
+}
+
 export default function TaskList(
     tasks,
     { onAdd, onEdit, onRemove, onToggle, onMove, isSorted = false },
@@ -92,7 +114,7 @@ export default function TaskList(
                       if (activeForm) return;
                       if (index > 0) {
                           const prevTaskId = tasks[index - 1].id;
-                          onMove(id, prevTaskId);
+                          onMove(id, prevTaskId, "before");
                       }
                   },
 
@@ -102,20 +124,53 @@ export default function TaskList(
                       if (activeForm) return;
                       if (index < tasks.length - 1) {
                           const nextTaskId = tasks[index + 1].id;
-                          onMove(id, nextTaskId);
+                          onMove(id, nextTaskId, "after");
                       }
-                  },
-
-            onDrop: isSorted
-                ? null
-                : (draggedId, targetId) => {
-                      if (activeForm) return;
-                      onMove(draggedId, targetId);
                   },
         });
 
         taskListWrapper.append(taskItem);
     });
+
+    if (!isSorted) {
+        taskListWrapper.addEventListener("dragover", (e) => {
+            if (activeForm) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+
+            const afterElement = getDragAfterElement(
+                taskListWrapper,
+                e.clientY,
+            );
+            if (afterElement == null) {
+                taskListWrapper.append(virtualPlaceholder);
+            } else {
+                taskListWrapper.insertBefore(virtualPlaceholder, afterElement);
+            }
+        });
+
+        taskListWrapper.addEventListener("drop", (e) => {
+            if (activeForm) return;
+            e.preventDefault();
+
+            const draggedId = e.dataTransfer.getData("text/plain");
+
+            const nextElement = virtualPlaceholder.nextElementSibling;
+            virtualPlaceholder.remove();
+
+            if (!draggedId) return;
+
+            if (
+                nextElement &&
+                nextElement.dataset &&
+                nextElement.dataset.taskId
+            ) {
+                onMove(draggedId, nextElement.dataset.taskId, "before");
+            } else {
+                onMove(draggedId, null);
+            }
+        });
+    }
 
     wrapper.append(taskAddButton, taskListWrapper);
 

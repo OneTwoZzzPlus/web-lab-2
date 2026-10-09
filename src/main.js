@@ -81,9 +81,9 @@ function renderTaskList() {
         onToggle: (id) => {
             store.toggle(id);
         },
-        onMove: (draggedId, targetId) => {
+        onMove: (draggedId, targetId, position) => {
             if (isSorted) return;
-            store.move(draggedId, targetId);
+            store.move(draggedId, targetId, position);
         },
     });
 

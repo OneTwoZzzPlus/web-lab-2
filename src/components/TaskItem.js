@@ -1,16 +1,16 @@
 export default function TaskItem(
     taskId,
     { title, date, completed },
-    { onToggle, onMoveUp, onMoveDown, onEdit, onRemove, onDrop },
+    { onToggle, onMoveUp, onMoveDown, onEdit, onRemove },
 ) {
     const wrapper = document.createElement("li");
     wrapper.classList.add("task");
-
-    const canReorder = Boolean(onMoveUp || onMoveDown || onDrop);
-    wrapper.draggable = canReorder;
     wrapper.dataset.taskId = taskId;
 
     if (completed) wrapper.classList.add("checked");
+
+    const canReorder = Boolean(onMoveUp || onMoveDown);
+    wrapper.draggable = canReorder;
 
     const titleNode = document.createElement("p");
     titleNode.textContent = title;
@@ -35,26 +35,8 @@ export default function TaskItem(
 
         wrapper.addEventListener("dragend", () => {
             wrapper.classList.remove("dragging");
-        });
-
-        wrapper.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = "move";
-            wrapper.classList.add("drag-over");
-        });
-
-        wrapper.addEventListener("dragleave", () => {
-            wrapper.classList.remove("drag-over");
-        });
-
-        wrapper.addEventListener("drop", (e) => {
-            e.preventDefault();
-            wrapper.classList.remove("drag-over");
-
-            const draggedId = e.dataTransfer.getData("text/plain");
-            if (draggedId && draggedId !== taskId && onDrop) {
-                onDrop(draggedId, taskId);
-            }
+            const virtual = document.querySelector(".task.virtual");
+            if (virtual) virtual.remove();
         });
     }
 

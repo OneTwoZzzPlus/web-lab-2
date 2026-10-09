@@ -29,7 +29,6 @@ const load = () => {
         }
     }
 
-    // Синхронизация порядка со списком задач
     for (let i = order.length - 1; i >= 0; i--) {
         if (!tasks[order[i]]) {
             order.splice(i, 1);
@@ -113,15 +112,24 @@ export const store = {
 
         commit();
     },
-    move(draggedId, targetId) {
+    move(draggedId, targetId, position = "before") {
         const oldIndex = order.indexOf(draggedId);
-        const targetIndex = order.indexOf(targetId);
-
-        if (oldIndex === -1 || targetIndex === -1 || oldIndex === targetIndex)
-            return;
+        if (oldIndex === -1) return;
 
         order.splice(oldIndex, 1);
-        order.splice(targetIndex, 0, draggedId);
+
+        if (!targetId) {
+            order.push(draggedId);
+        } else {
+            const targetIndex = order.indexOf(targetId);
+            if (targetIndex !== -1) {
+                const insertIndex =
+                    position === "after" ? targetIndex + 1 : targetIndex;
+                order.splice(insertIndex, 0, draggedId);
+            } else {
+                order.push(draggedId);
+            }
+        }
 
         commit();
     },
