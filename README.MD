@@ -18,7 +18,12 @@
 ├── index.html              # HTML (подключение скрипта)
 ├── style.css               # CSS (стили)
 ├── assets/                 # Иконки
-└── src/                    # JavaScript
-    ├── main.js             # Точка входа
-    └── ...
+└── src/
+    ├── main.js             # Точка входа и логика фильтров
+    ├── store.js            # Хранилище задач
+    └── components
+        ├── Header.js       # Рендер фильтров
+        ├── TaskList.js     # Рендер списка
+        ├── TaskItem.js     # Рендер задачи
+        └── TaskForm.js     # Рендер формы изменения задачи
 ```
