@@ -36,6 +36,9 @@ export const store = {
     getOrder() {
         return [...order];
     },
+    getData() {
+        return { tasks: tasks, order: order };
+    },
     subscribe(handler) {
         listeners.add(handler);
         return () => listeners.delete(handler);
