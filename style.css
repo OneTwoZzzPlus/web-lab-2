@@ -287,3 +287,7 @@ li.virtual {
     opacity: 0.4;
     pointer-events: none;
 }
+
+li.dragging {
+    display: none;
+}

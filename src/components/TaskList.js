@@ -1,9 +1,6 @@
 import TaskItem from "./TaskItem.js";
 import TaskForm from "./TaskForm.js";
 
-const virtualPlaceholder = document.createElement("li");
-virtualPlaceholder.classList.add("task", "virtual");
-
 function getDragAfterElement(container, y) {
     const draggableElements = [
         ...container.querySelectorAll(".task:not(.dragging):not(.virtual)"),
@@ -36,6 +33,10 @@ export default function TaskList(
 
     const taskListWrapper = document.createElement("ul");
     taskListWrapper.classList.add("tasks");
+
+    const virtualPlaceholder = document.createElement("li");
+    virtualPlaceholder.classList.add("task", "virtual");
+    virtualPlaceholder.style.pointerEvents = "none";
 
     let activeForm = null;
 
@@ -133,7 +134,23 @@ export default function TaskList(
     });
 
     if (!isSorted) {
-        taskListWrapper.addEventListener("dragover", (e) => {
+        wrapper.addEventListener("dragstart", (e) => {
+            const draggedItem = e.target.closest(".task");
+            if (!draggedItem || activeForm) return;
+
+            virtualPlaceholder.replaceChildren(
+                ...Array.from(draggedItem.childNodes).map((node) =>
+                    node.cloneNode(true),
+                ),
+            );
+
+            virtualPlaceholder.className = draggedItem.className;
+            virtualPlaceholder.classList.add("virtual");
+
+            draggedItem.after(virtualPlaceholder);
+        });
+
+        wrapper.addEventListener("dragover", (e) => {
             if (activeForm) return;
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
@@ -149,7 +166,7 @@ export default function TaskList(
             }
         });
 
-        taskListWrapper.addEventListener("drop", (e) => {
+        wrapper.addEventListener("drop", (e) => {
             if (activeForm) return;
             e.preventDefault();
 

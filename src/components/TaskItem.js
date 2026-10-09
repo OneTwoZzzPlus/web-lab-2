@@ -30,7 +30,9 @@ export default function TaskItem(
         wrapper.addEventListener("dragstart", (e) => {
             e.dataTransfer.setData("text/plain", taskId);
             e.dataTransfer.effectAllowed = "move";
-            wrapper.classList.add("dragging");
+            setTimeout(() => {
+                wrapper.classList.add("dragging");
+            }, 0);
         });
 
         wrapper.addEventListener("dragend", () => {
