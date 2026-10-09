@@ -65,8 +65,10 @@ function getVisibleTasks() {
 
 function renderTaskList() {
     const tasks = getVisibleTasks();
+    const isSorted = state.sort !== "custom";
 
     const taskList = TaskList(tasks, {
+        isSorted,
         onAdd: (title, date) => {
             store.add(title, date);
         },
@@ -80,6 +82,7 @@ function renderTaskList() {
             store.toggle(id);
         },
         onMove: (draggedId, targetId) => {
+            if (isSorted) return;
             store.move(draggedId, targetId);
         },
     });

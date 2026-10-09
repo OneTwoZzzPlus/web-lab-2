@@ -5,7 +5,9 @@ export default function TaskItem(
 ) {
     const wrapper = document.createElement("li");
     wrapper.classList.add("task");
-    wrapper.draggable = true;
+
+    const canReorder = Boolean(onMoveUp || onMoveDown || onDrop);
+    wrapper.draggable = canReorder;
     wrapper.dataset.taskId = taskId;
 
     if (completed) wrapper.classList.add("checked");
@@ -24,35 +26,37 @@ export default function TaskItem(
         onRemove,
     });
 
-    wrapper.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", taskId);
-        e.dataTransfer.effectAllowed = "move";
-        wrapper.classList.add("dragging");
-    });
+    if (canReorder) {
+        wrapper.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", taskId);
+            e.dataTransfer.effectAllowed = "move";
+            wrapper.classList.add("dragging");
+        });
 
-    wrapper.addEventListener("dragend", () => {
-        wrapper.classList.remove("dragging");
-    });
+        wrapper.addEventListener("dragend", () => {
+            wrapper.classList.remove("dragging");
+        });
 
-    wrapper.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-        wrapper.classList.add("drag-over");
-    });
+        wrapper.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            wrapper.classList.add("drag-over");
+        });
 
-    wrapper.addEventListener("dragleave", () => {
-        wrapper.classList.remove("drag-over");
-    });
+        wrapper.addEventListener("dragleave", () => {
+            wrapper.classList.remove("drag-over");
+        });
 
-    wrapper.addEventListener("drop", (e) => {
-        e.preventDefault();
-        wrapper.classList.remove("drag-over");
+        wrapper.addEventListener("drop", (e) => {
+            e.preventDefault();
+            wrapper.classList.remove("drag-over");
 
-        const draggedId = e.dataTransfer.getData("text/plain");
-        if (draggedId && draggedId !== taskId && onDrop) {
-            onDrop(draggedId, taskId);
-        }
-    });
+            const draggedId = e.dataTransfer.getData("text/plain");
+            if (draggedId && draggedId !== taskId && onDrop) {
+                onDrop(draggedId, taskId);
+            }
+        });
+    }
 
     wrapper.append(titleNode, dateNode, control);
 
@@ -89,8 +93,21 @@ function TaskControlPanel(
             completed ? "assets/completed.svg" : "assets/active.svg",
             onToggle,
         ),
-        createButton("Переместить вверх", "assets/up.svg", onMoveUp),
-        createButton("Переместить вниз", "assets/down.svg", onMoveDown),
+    );
+
+    if (onMoveUp) {
+        wrapper.append(
+            createButton("Переместить вверх", "assets/up.svg", onMoveUp),
+        );
+    }
+
+    if (onMoveDown) {
+        wrapper.append(
+            createButton("Переместить вниз", "assets/down.svg", onMoveDown),
+        );
+    }
+
+    wrapper.append(
         createButton("Редактировать", "assets/edit.svg", onEdit),
         createButton("Удалить", "assets/remove.svg", onRemove),
     );

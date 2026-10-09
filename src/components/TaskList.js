@@ -3,7 +3,7 @@ import TaskForm from "./TaskForm.js";
 
 export default function TaskList(
     tasks,
-    { onAdd, onEdit, onRemove, onToggle, onMove },
+    { onAdd, onEdit, onRemove, onToggle, onMove, isSorted = false },
 ) {
     const wrapper = document.createElement("section");
 
@@ -15,7 +15,6 @@ export default function TaskList(
     const taskListWrapper = document.createElement("ul");
     taskListWrapper.classList.add("tasks");
 
-    // Текущая активная форма (null, если форма не открыта)
     let activeForm = null;
 
     function closeForm() {
@@ -65,7 +64,6 @@ export default function TaskList(
 
                 onCancel: () => {
                     if (activeForm) {
-                        // Возвращаем исходный элемент карточки задачи на место формы
                         taskListWrapper.replaceChild(taskItem, activeForm);
                         activeForm = null;
                         taskAddButton.hidden = false;
@@ -74,7 +72,6 @@ export default function TaskList(
             },
         );
 
-        // Заменяем карточку задачи формой редактирования
         taskListWrapper.replaceChild(activeForm, taskItem);
     }
 
@@ -89,26 +86,32 @@ export default function TaskList(
                 openEditForm(task, taskItem);
             },
 
-            onMoveUp: (id) => {
-                if (activeForm) return;
-                if (index > 0) {
-                    const prevTaskId = tasks[index - 1].id;
-                    onMove(id, prevTaskId);
-                }
-            },
+            onMoveUp: isSorted
+                ? null
+                : (id) => {
+                      if (activeForm) return;
+                      if (index > 0) {
+                          const prevTaskId = tasks[index - 1].id;
+                          onMove(id, prevTaskId);
+                      }
+                  },
 
-            onMoveDown: (id) => {
-                if (activeForm) return;
-                if (index < tasks.length - 1) {
-                    const nextTaskId = tasks[index + 1].id;
-                    onMove(id, nextTaskId);
-                }
-            },
+            onMoveDown: isSorted
+                ? null
+                : (id) => {
+                      if (activeForm) return;
+                      if (index < tasks.length - 1) {
+                          const nextTaskId = tasks[index + 1].id;
+                          onMove(id, nextTaskId);
+                      }
+                  },
 
-            onDrop: (draggedId, targetId) => {
-                if (activeForm) return;
-                onMove(draggedId, targetId);
-            },
+            onDrop: isSorted
+                ? null
+                : (draggedId, targetId) => {
+                      if (activeForm) return;
+                      onMove(draggedId, targetId);
+                  },
         });
 
         taskListWrapper.append(taskItem);
