@@ -26,6 +26,8 @@
 }
 
 body {
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
     max-width: 800px;
     margin: 0 auto;
@@ -33,6 +35,18 @@ body {
     font-family: system-ui, sans-serif;
     line-height: 1.5;
     background: var(--color-bg-common);
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+section {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 h1,
@@ -59,7 +73,7 @@ li {
     background: var(--color-background);
 }
 
-/* RADIO BUTTON */
+/* BUTTON */
 
 button {
     padding: var(--spacing-sm);
@@ -258,6 +272,9 @@ ul.tasks {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+    flex-grow: 1;
+    min-height: 200px;
+    padding-bottom: 100px;
 }
 
 li.task,
