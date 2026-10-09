@@ -59,9 +59,9 @@ function Filter({ onFilter }) {
     wrapper.classList.add("radio");
 
     const options = [
-        { id: "all", value: "all", label: "Все" },
-        { id: "active", value: "active", label: "Активные" },
-        { id: "completed", value: "completed", label: "Выполненные" },
+        { id: "filter-all", value: "all", label: "Все" },
+        { id: "filter-active", value: "active", label: "Активные" },
+        { id: "filter-completed", value: "completed", label: "Выполненные" },
     ];
 
     options.forEach(({ id, value, label }) => {
@@ -91,9 +91,9 @@ export function Sort({ onSort }) {
     wrapper.classList.add("radio");
 
     const options = [
-        { id: "custom", value: "custom", label: "Вручную" },
-        { id: "new", value: "new", label: "Ранние" },
-        { id: "old", value: "old", label: "Поздние" },
+        { id: "sort-custom", value: "custom", label: "Вручную" },
+        { id: "sort-new", value: "new", label: "Ранние" },
+        { id: "sort-old", value: "old", label: "Поздние" },
     ];
 
     options.forEach(({ id, value, label }) => {
