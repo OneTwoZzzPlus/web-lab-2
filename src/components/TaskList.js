@@ -38,6 +38,17 @@ export default function TaskList(
     virtualPlaceholder.classList.add("task", "virtual");
     virtualPlaceholder.style.pointerEvents = "none";
 
+    function setupVirtualPlaceholder(sourceTask) {
+        virtualPlaceholder.replaceChildren(
+            ...Array.from(sourceTask.childNodes).map((node) =>
+                node.cloneNode(true),
+            ),
+        );
+        virtualPlaceholder.className = sourceTask.className;
+        virtualPlaceholder.classList.add("virtual");
+        virtualPlaceholder.style.pointerEvents = "none";
+    }
+
     let activeForm = null;
 
     function closeForm() {
@@ -128,27 +139,25 @@ export default function TaskList(
                           onMove(id, nextTaskId, "after");
                       }
                   },
-            onMove,
         });
 
         taskListWrapper.append(taskItem);
     });
 
     if (!isSorted) {
-        wrapper.addEventListener("dragstart", (e) => {
+        taskListWrapper.addEventListener("dragstart", (e) => {
             const draggedItem = e.target.closest(".task");
             if (!draggedItem || activeForm) return;
 
-            virtualPlaceholder.replaceChildren(
-                ...Array.from(draggedItem.childNodes).map((node) =>
-                    node.cloneNode(true),
-                ),
-            );
+            e.dataTransfer.setData("text/plain", draggedItem.dataset.taskId);
+            e.dataTransfer.effectAllowed = "move";
 
-            virtualPlaceholder.className = draggedItem.className;
-            virtualPlaceholder.classList.add("virtual");
-
+            setupVirtualPlaceholder(draggedItem);
             draggedItem.after(virtualPlaceholder);
+
+            setTimeout(() => {
+                draggedItem.classList.add("dragging");
+            }, 0);
         });
 
         wrapper.addEventListener("dragover", (e) => {
@@ -172,9 +181,11 @@ export default function TaskList(
             e.preventDefault();
 
             const draggedId = e.dataTransfer.getData("text/plain");
-
             const nextElement = virtualPlaceholder.nextElementSibling;
+
             virtualPlaceholder.remove();
+            const draggingEl = taskListWrapper.querySelector(".dragging");
+            if (draggingEl) draggingEl.classList.remove("dragging");
 
             if (!draggedId) return;
 
@@ -188,6 +199,89 @@ export default function TaskList(
                 onMove(draggedId, null);
             }
         });
+
+        wrapper.addEventListener("dragend", () => {
+            virtualPlaceholder.remove();
+            const draggingEl = taskListWrapper.querySelector(".dragging");
+            if (draggingEl) draggingEl.classList.remove("dragging");
+        });
+
+        let touchDraggedTask = null;
+        let touchStartY = 0;
+        let isTouchDragging = false;
+
+        taskListWrapper.addEventListener(
+            "touchstart",
+            (e) => {
+                if (activeForm) return;
+                const taskItem = e.target.closest(".task");
+                if (!taskItem || e.target.closest("button")) return;
+
+                touchDraggedTask = taskItem;
+                touchStartY = e.touches[0].clientY;
+                isTouchDragging = false;
+            },
+            { passive: true },
+        );
+
+        taskListWrapper.addEventListener(
+            "touchmove",
+            (e) => {
+                if (!touchDraggedTask) return;
+
+                const touchY = e.touches[0].clientY;
+                const moveDelta = Math.abs(touchY - touchStartY);
+
+                if (!isTouchDragging && moveDelta > 5) {
+                    isTouchDragging = true;
+                    setupVirtualPlaceholder(touchDraggedTask);
+                    touchDraggedTask.after(virtualPlaceholder);
+                    touchDraggedTask.classList.add("dragging");
+                }
+
+                if (isTouchDragging) {
+                    e.preventDefault();
+
+                    const afterElement = getDragAfterElement(
+                        taskListWrapper,
+                        touchY,
+                    );
+                    if (afterElement == null) {
+                        taskListWrapper.append(virtualPlaceholder);
+                    } else {
+                        taskListWrapper.insertBefore(
+                            virtualPlaceholder,
+                            afterElement,
+                        );
+                    }
+                }
+            },
+            { passive: false },
+        );
+
+        const handleTouchEnd = () => {
+            if (!touchDraggedTask) return;
+
+            if (isTouchDragging) {
+                const nextElement = virtualPlaceholder.nextElementSibling;
+                const targetId =
+                    nextElement && nextElement.dataset
+                        ? nextElement.dataset.taskId
+                        : null;
+                const draggedId = touchDraggedTask.dataset.taskId;
+
+                virtualPlaceholder.remove();
+                touchDraggedTask.classList.remove("dragging");
+
+                onMove(draggedId, targetId, "before");
+            }
+
+            touchDraggedTask = null;
+            isTouchDragging = false;
+        };
+
+        taskListWrapper.addEventListener("touchend", handleTouchEnd);
+        taskListWrapper.addEventListener("touchcancel", handleTouchEnd);
     }
 
     wrapper.append(taskAddButton, taskListWrapper);
