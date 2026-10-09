@@ -159,6 +159,7 @@ div.radio input:hover + label {
 header {
     display: grid;
     gap: var(--spacing-xs);
+    margin: 0 0 var(--spacing-sm) 0;
 }
 
 div.radios {
@@ -248,7 +249,7 @@ button.iconic:hover {
 /* TASKS */
 
 button.task-add {
-    margin: var(--spacing-sm) 0 var(--spacing-xs) 0;
+    margin: 0 0 var(--spacing-xs) 0;
     width: 100%;
     text-align: start;
 }
@@ -263,6 +264,13 @@ li.task,
 li.task form {
     display: flex;
     flex-direction: column;
+    gap: var(--spacing-xs);
+    user-select: none;
+}
+
+li.task form div {
+    display: flex;
+    flex-direction: row;
     gap: var(--spacing-xs);
     user-select: none;
 }
