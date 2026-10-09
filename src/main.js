@@ -10,17 +10,14 @@ const state = {
 
 const header = Header({
     onSearch: (value) => {
-        console.log("Поиск:", value);
         state.search = value;
         renderTaskList();
     },
     onFilter: (value) => {
-        console.log("Фильтр:", value);
         state.filter = value;
         renderTaskList();
     },
     onSort: (value) => {
-        console.log("Сортировка:", value);
         state.sort = value;
         renderTaskList();
     },
@@ -38,7 +35,6 @@ function getVisibleTasks() {
 
     if (state.search.trim()) {
         const query = state.search.trim().toLowerCase();
-
         result = result.filter((task) =>
             task.title.toLowerCase().includes(query),
         );
@@ -51,9 +47,17 @@ function getVisibleTasks() {
     }
 
     if (state.sort === "new") {
-        result.sort((a, b) => new Date(a.date) - new Date(b.date));
+        result.sort((a, b) => {
+            if (!a.date) return 1;
+            if (!b.date) return -1;
+            return new Date(a.date) - new Date(b.date);
+        });
     } else if (state.sort === "old") {
-        result.sort((a, b) => new Date(b.date) - new Date(a.date));
+        result.sort((a, b) => {
+            if (!a.date) return 1;
+            if (!b.date) return -1;
+            return new Date(b.date) - new Date(a.date);
+        });
     }
 
     return result;
@@ -75,8 +79,8 @@ function renderTaskList() {
         onToggle: (id) => {
             store.toggle(id);
         },
-        onMove: (id, index) => {
-            store.move(id, index);
+        onMove: (draggedId, targetId) => {
+            store.move(draggedId, targetId);
         },
     });
 

@@ -3,15 +3,45 @@ const order = [];
 const listeners = new Set();
 
 const load = () => {
+    for (const key in tasks) {
+        delete tasks[key];
+    }
+    order.length = 0;
+
     const rawTasks = localStorage.getItem("todo:tasks");
-    const parsedTasks = rawTasks ? JSON.parse(rawTasks) : {};
-    Object.assign(tasks, parsedTasks);
+    if (rawTasks) {
+        try {
+            Object.assign(tasks, JSON.parse(rawTasks));
+        } catch (e) {
+            console.error("Ошибка чтения todo:tasks из localStorage", e);
+        }
+    }
 
     const rawOrder = localStorage.getItem("todo:order");
-    const parsedOrder = rawOrder ? JSON.parse(rawOrder) : [];
-    Object.assign(order, parsedOrder);
+    if (rawOrder) {
+        try {
+            const parsedOrder = JSON.parse(rawOrder);
+            if (Array.isArray(parsedOrder)) {
+                order.push(...parsedOrder);
+            }
+        } catch (e) {
+            console.error("Ошибка чтения todo:order из localStorage", e);
+        }
+    }
 
-    return { tasks: tasks, order: order };
+    // Синхронизация порядка со списком задач
+    for (let i = order.length - 1; i >= 0; i--) {
+        if (!tasks[order[i]]) {
+            order.splice(i, 1);
+        }
+    }
+    Object.keys(tasks).forEach((id) => {
+        if (!order.includes(id)) {
+            order.push(id);
+        }
+    });
+
+    return { tasks, order };
 };
 
 const save = () => {
@@ -20,7 +50,7 @@ const save = () => {
 };
 
 const notify = () => {
-    listeners.forEach((handler) => handler({ tasks: tasks, order: order }));
+    listeners.forEach((handler) => handler({ tasks, order }));
 };
 
 const commit = () => {
@@ -37,7 +67,7 @@ export const store = {
         return [...order];
     },
     getData() {
-        return { tasks: tasks, order: order };
+        return { tasks, order };
     },
     subscribe(handler) {
         listeners.add(handler);
@@ -83,16 +113,15 @@ export const store = {
 
         commit();
     },
-    move(id, newIndex) {
-        const oldIndex = order.indexOf(id);
-        if (oldIndex === -1) return;
+    move(draggedId, targetId) {
+        const oldIndex = order.indexOf(draggedId);
+        const targetIndex = order.indexOf(targetId);
 
-        newIndex = Math.max(0, Math.min(newIndex, tasks.length - 1));
-
-        if (oldIndex === newIndex) return;
+        if (oldIndex === -1 || targetIndex === -1 || oldIndex === targetIndex)
+            return;
 
         order.splice(oldIndex, 1);
-        order.splice(newIndex, 0, id);
+        order.splice(targetIndex, 0, draggedId);
 
         commit();
     },
